@@ -1,0 +1,11 @@
+version: '3.3'
+services:
+  scylla:
+    image: scylladb/scylla
+    ports:
+      - 9042:9042
+    container_name: test-scylla
+networks:
+  webnet:
+volumes:
+  data-volume:
