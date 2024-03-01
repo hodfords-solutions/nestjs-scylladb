@@ -1,5 +1,5 @@
 {
-  "name": "@diginexhk/nestjs-scylladb",
+  "name": "@hodfords/nestjs-scylladb",
   "version": "10.0.0",
   "description": "NestJS ScyllaDB",
   "license": "MIT",
@@ -10,13 +10,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hodford/nestjs-scylladb"
+    "url": "git+https://github.com/hodfords-solutions/nestjs-scylladb"
   },
   "bugs": {
     "url": "https://github.com/hodford/nestjs-scylladb/issues"
-  },
-  "publishConfig": {
-    "@diginexhk:registry": "https://gitlab.com/api/v4/projects/28807495/packages/npm/"
   },
   "tags": [
     "orm",
