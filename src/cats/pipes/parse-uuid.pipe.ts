@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
-import { types } from 'libs';
-import { isUuid, uuid } from 'libs/utils/db.utils';
+import { isUuid, types, uuid } from 'libs';
 
 @Injectable()
 export class ParseUuidPipe implements PipeTransform<any, types.Uuid> {

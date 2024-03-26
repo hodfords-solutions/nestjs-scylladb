@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Repository } from './repository';
-import { BaseModel } from '../interfaces/externals/scylla-db.interface';
+import { BaseModel } from '../interfaces/externals/scylla.interface';
 import { ReturnQueryBuilder } from './builder/return-query.builder';
 
 export class RepositoryFactory {

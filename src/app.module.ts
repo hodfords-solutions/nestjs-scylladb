@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ScyllaModule } from 'libs';
-import { CatsModule } from './cats';
+import { CatModule } from './cats';
 import { scyllaOptions } from './config';
 
 @Module({
-    imports: [ScyllaModule.forRoot(scyllaOptions), CatsModule]
+    imports: [ScyllaModule.forRoot(scyllaOptions), CatModule]
 })
 export class AppModule {}

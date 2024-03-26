@@ -1,24 +1,24 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+import { Type } from '@nestjs/common';
+import { types } from 'cassandra-driver';
+import { EntityNotFoundError } from '../errors/entity-not-found.error';
+import { Observable, Subject, defer, lastValueFrom } from 'rxjs';
+import { map } from 'rxjs/operators';
+import snakecaseKeys from 'snakecase-keys';
 import {
     BaseModel,
+    DeleteOptionsStatic,
     FindQuery,
     FindQueryOptionsStatic,
     SaveOptionsStatic,
-    UpdateOptionsStatic,
-    DeleteOptionsStatic
-} from '../interfaces/externals/scylla-db.interface';
-import { Observable, defer, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { types } from 'cassandra-driver';
-import { Type } from '@nestjs/common';
-import { ReturnQueryBuilder } from './builder/return-query.builder';
+    UpdateOptionsStatic
+} from '../interfaces/externals/scylla.interface';
 import { transformEntity } from '../utils/transform-entity.utils';
-import { EntityNotFoundError } from '../errors';
+import { ReturnQueryBuilder } from './builder/return-query.builder';
 
 const defaultOptions = {
     findOptions: { raw: true },
-    updateOptions: { if_exists: true },
-    deleteOptions: { if_exists: true }
+    updateOptions: snakecaseKeys({ ifExists: true }),
+    deleteOptions: snakecaseKeys({ ifExists: true })
 };
 
 export class Repository<Entity = any> {
@@ -36,64 +36,65 @@ export class Repository<Entity = any> {
         return transformEntity(this.target, entityLike);
     }
 
-    findOne(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Observable<Entity>;
+    findOne(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Promise<Entity>;
 
-    findOne(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Observable<Entity> {
-        return defer(() =>
-            this.model.findOneAsync(query, {
-                ...options,
-                ...defaultOptions.findOptions
-            })
-        ).pipe(map((x) => x && transformEntity(this.target, x)));
-    }
-
-    findOneOrFail(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Observable<Entity>;
-
-    findOneOrFail(query: FindQuery<Entity>, maybeOptions: FindQueryOptionsStatic<Entity> = {}): Observable<Entity> {
-        return this.findOne(query, maybeOptions).pipe(
-            map((entity) => {
-                if (entity === undefined) {
-                    throw new EntityNotFoundError(this.target, query);
-                }
-                return entity;
-            })
+    findOne(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<Entity> {
+        return lastValueFrom(
+            defer(() =>
+                this.model.findOneAsync(query, {
+                    ...options,
+                    ...defaultOptions.findOptions
+                })
+            ).pipe(map((x) => x && transformEntity(this.target, x)))
         );
     }
 
-    find(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Observable<Entity[]>;
+    findOneOrFail(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Promise<Entity>;
 
-    find(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Observable<Entity[]> {
-        return defer(() =>
-            this.model.findAsync(query, {
-                ...options,
-                ...defaultOptions.findOptions
-            })
-        ).pipe(map((x) => transformEntity(this.target, x)));
+    findOneOrFail(query: FindQuery<Entity>, maybeOptions: FindQueryOptionsStatic<Entity> = {}): Promise<Entity> {
+        return this.findOne(query, maybeOptions).then((entity) => {
+            if (entity === undefined) {
+                throw new EntityNotFoundError(this.target, query);
+            }
+            return entity;
+        });
     }
 
-    findAndCount(
-        query: FindQuery<Entity>,
-        options: FindQueryOptionsStatic<Entity> = {}
-    ): Observable<[Entity[], number]> {
-        return defer(() =>
-            this.model.findAsync(query, {
-                ...(options as any),
-                ...defaultOptions.findOptions
-            })
-        ).pipe(
-            map((x) => transformEntity(this.target, x)),
-            map((entities) => [entities, entities.length] as [Entity[], number])
+    find(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Promise<Entity[]>;
+
+    find(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<Entity[]> {
+        return lastValueFrom(
+            defer(() =>
+                this.model.findAsync(query, {
+                    ...options,
+                    ...defaultOptions.findOptions
+                })
+            ).pipe(map((x) => transformEntity(this.target, x)))
         );
     }
 
-    save(entity: Partial<Entity>, options?: SaveOptionsStatic): Observable<Entity>;
+    findAndCount(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<[Entity[], number]> {
+        return lastValueFrom(
+            defer(() =>
+                this.model.findAsync(query, {
+                    ...(options as any),
+                    ...defaultOptions.findOptions
+                })
+            ).pipe(
+                map((x) => transformEntity(this.target, x)),
+                map((entities) => [entities, entities.length] as [Entity[], number])
+            )
+        );
+    }
 
-    save(entities: Partial<Entity>[], options?: SaveOptionsStatic): Observable<Entity[]>;
+    save(entity: Partial<Entity>, options?: SaveOptionsStatic): Promise<Entity>;
+
+    save(entities: Partial<Entity>[], options?: SaveOptionsStatic): Promise<Entity[]>;
 
     save(
         entityLike: Partial<Entity> | Partial<Entity>[],
         options: SaveOptionsStatic = {}
-    ): Observable<Entity> | Observable<Entity[]> {
+    ): Promise<Entity> | Promise<Entity[]> {
         const saveFunc = async (entity) => {
             const model = new this.model(entity);
             await model.saveAsync(options);
@@ -102,34 +103,32 @@ export class Repository<Entity = any> {
         const saveMultipleFunc = (arrayLike: Entity[]) => Promise.all(arrayLike.map((x) => saveFunc(x)));
 
         return Array.isArray(entityLike)
-            ? defer(() => saveMultipleFunc(entityLike as any))
-            : defer(() => saveFunc(entityLike as any));
+            ? lastValueFrom(defer(() => saveMultipleFunc(entityLike as any)))
+            : lastValueFrom(defer(() => saveFunc(entityLike as any)));
     }
 
-    update(
-        query: FindQuery<Entity>,
-        updateValue: Partial<Entity>,
-        options?: UpdateOptionsStatic<Entity>
-    ): Observable<any>;
+    update(query: FindQuery<Entity>, updateValue: Partial<Entity>, options?: UpdateOptionsStatic<Entity>): Promise<any>;
 
     update(
         query: FindQuery<Entity>,
         updateValue: Partial<Entity>,
         options: UpdateOptionsStatic<Entity> = {}
-    ): Observable<any> {
-        return defer(() =>
-            this.model.updateAsync(query, updateValue, {
-                ...defaultOptions.updateOptions,
-                ...options
-            })
+    ): Promise<any> {
+        return lastValueFrom(
+            defer(() =>
+                this.model.updateAsync(query, updateValue, {
+                    ...defaultOptions.updateOptions,
+                    ...options
+                })
+            )
         );
     }
 
-    remove(entity: Entity, options?: DeleteOptionsStatic): Observable<Entity>;
+    remove(entity: Entity, options?: DeleteOptionsStatic): Promise<Entity>;
 
-    remove(entity: Entity[], options?: DeleteOptionsStatic): Observable<Entity[]>;
+    remove(entity: Entity[], options?: DeleteOptionsStatic): Promise<Entity[]>;
 
-    remove(entityOrEntities: Entity | Entity[], options: DeleteOptionsStatic = {}): Observable<Entity | Entity[]> {
+    remove(entityOrEntities: Entity | Entity[], options: DeleteOptionsStatic = {}): Promise<Entity | Entity[]> {
         const removeFunc = (entity) =>
             new this.model(entity).deleteAsync({
                 ...defaultOptions.deleteOptions,
@@ -140,25 +139,27 @@ export class Repository<Entity = any> {
                 ? entityOrEntities.map((x) => removeFunc(x))
                 : [removeFunc(entityOrEntities)];
 
-        return defer(() => Promise.all(promiseArray)).pipe(map(() => entityOrEntities));
+        return lastValueFrom(defer(() => Promise.all(promiseArray)).pipe(map(() => entityOrEntities)));
     }
 
-    delete(query: FindQuery<Entity>, options?: DeleteOptionsStatic): Observable<any>;
+    delete(query: FindQuery<Entity>, options?: DeleteOptionsStatic): Promise<any>;
 
     delete(query = {}, options = {}) {
-        return defer(() =>
-            this.model.deleteAsync(query, {
-                ...defaultOptions.deleteOptions,
-                ...options
-            })
+        return lastValueFrom(
+            defer(() =>
+                this.model.deleteAsync(query, {
+                    ...defaultOptions.deleteOptions,
+                    ...options
+                })
+            )
         );
     }
 
-    truncate(): Observable<any> {
-        return defer(() => this.model.truncateAsync());
+    truncate(): Promise<any> {
+        return lastValueFrom(defer(() => this.model.truncateAsync()));
     }
 
-    stream(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Observable<Entity> {
+    stream(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<Entity> {
         const reader$ = new Subject<any>();
 
         const onRead = (reader): void => {
@@ -181,7 +182,7 @@ export class Repository<Entity = any> {
 
         this.model.stream(query, { ...options, ...defaultOptions.findOptions }, onRead, onDone);
 
-        return reader$.asObservable();
+        return lastValueFrom(reader$.asObservable());
     }
 
     eachRow(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): EachRowArgument {

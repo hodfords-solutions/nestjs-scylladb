@@ -19,7 +19,9 @@ export class CatsController {
         if (Array.isArray(createCatDto)) {
             return this.catRepository.saveMultiple(createCatDto);
         }
-        const cat = await this.catsService.create(createCatDto).toPromise();
+
+        const cat = await this.catsService.create(createCatDto);
+
         return cat;
     }
 
@@ -41,9 +43,9 @@ export class CatsController {
             updateBody.time_id = timeuuid(updateBody.time_id);
         }
 
-        const { timeId, ...restBody } = updateBody;
+        const { ...restBody } = updateBody;
 
-        return this.catRepository.update({ id, timeId }, restBody);
+        return this.catRepository.update({ id }, restBody);
     }
 
     @Post('batch')

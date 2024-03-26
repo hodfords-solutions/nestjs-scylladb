@@ -1,30 +1,29 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import { FindSubQueryStatic } from './externals';
+import { FindSubQueryStatic } from './externals/scylla.interface';
 
 export interface EntityOptions<T = object> {
-    table_name?: string;
+    tableName?: string;
 
-    key?: Array<keyof T | Array<keyof T>>;
+    key?: Array<string | Array<string>>;
 
-    materialized_views?: { [index: string]: MaterializeViewStatic<T> };
+    materializedViews?: { [index: string]: MaterializeViewStatic<T> };
 
-    clustering_order?: { [index: string]: 'desc' | 'asc' };
+    clusteringOrder?: { [index: string]: 'desc' | 'asc' };
 
     options?: EntityExtraOptions;
 
     indexes?: Array<keyof T> | string[];
 
-    custom_indexes?: Partial<CustomIndexOptions>[];
+    customIndexes?: Partial<CustomIndexOptions>[];
 
     methods?: { [index: string]: Function };
 
-    es_index_mapping?: {
+    esIndexMapping?: {
         discover?: string;
 
         properties?: EsIndexPropertiesOptionsStatic<T>;
     };
 
-    graph_mapping?: Partial<GraphMappingOptionsStatic<T | { [index: string]: any }>>;
+    graphMapping?: Partial<GraphMappingOptionsStatic<T | { [index: string]: any }>>;
 
     [index: string]: any;
 }
@@ -36,7 +35,7 @@ export interface MaterializeViewStatic<T> {
 
     key: Array<keyof T | Array<keyof T>>;
 
-    clustering_order?: ClusterOrder<T>;
+    clusteringOrder?: ClusterOrder<T>;
 
     filter?: FilterOptions<T>;
 }
