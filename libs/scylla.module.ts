@@ -1,7 +1,9 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ScyllaCoreModule } from './scylla-core.module';
-import { ScyllaModuleOptions, ScyllaModuleAsyncOptions, Connection, ConnectionOptions } from './interfaces';
 import { createScyllaProviders } from './scylla.providers';
+import { ScyllaModuleAsyncOptions, ScyllaModuleOptions } from './interfaces/scylla-module-options.interface';
+import { Connection } from './interfaces/externals/scylla-connection.interface';
+import { ConnectionOptions } from './interfaces/externals/scylla-client-options.interface';
 
 @Module({})
 export class ScyllaModule {

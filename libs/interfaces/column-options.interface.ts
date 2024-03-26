@@ -5,8 +5,7 @@ export interface ColumnOptions {
 
     typeDef?: string;
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    default?: string | (() => any) | Function | { $db_function: string };
+    default?: string | (() => any) | Function | { $dbFunction: string };
 
     virtual?: { get?: any; set?: any };
 

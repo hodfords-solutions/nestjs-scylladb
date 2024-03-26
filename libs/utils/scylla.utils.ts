@@ -1,8 +1,9 @@
 import { Observable } from 'rxjs';
 import { delay, retryWhen, scan } from 'rxjs/operators';
 import { Logger, Type } from '@nestjs/common';
-import { Connection, ConnectionOptions } from 'libs';
-import { Repository } from 'libs/repositories/repository';
+import { Repository } from '../repositories/repository';
+import { ConnectionOptions } from '../interfaces/externals/scylla-client-options.interface';
+import { Connection } from '../interfaces/externals/scylla-connection.interface';
 
 export function handleRetry(
     retryAttempts: number = 6,

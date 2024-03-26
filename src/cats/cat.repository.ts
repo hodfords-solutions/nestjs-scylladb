@@ -1,8 +1,8 @@
-import { EntityRepository } from 'libs/decorators';
 import { CatEntity } from './entities/cat.entity';
 import { from } from 'rxjs';
 import { mergeMap, toArray } from 'rxjs/operators';
 import { Repository } from 'libs/repositories/repository';
+import { EntityRepository } from 'libs';
 
 @EntityRepository(CatEntity)
 export class CatRepository extends Repository<CatEntity> {

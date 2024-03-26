@@ -9,6 +9,7 @@ export function BeforeSave(): MethodDecorator {
         Reflect.defineMetadata(BEFORE_SAVE, hookFuncLikeArray, target);
 
         const { before_save } = getOptions(target);
+
         if (!before_save) {
             addOptions(target, { before_save: addHookFunction(target, BEFORE_SAVE) });
         }
