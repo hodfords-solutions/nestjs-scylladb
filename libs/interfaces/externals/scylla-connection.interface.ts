@@ -1,6 +1,6 @@
 import { ConnectionOptions } from './scylla-client-options.interface';
 import { types } from 'cassandra-driver';
-import { BaseModel } from './scylla-db.interface';
+import { BaseModel } from './scylla.interface';
 import Scylla from 'express-cassandra';
 
 export interface Connection extends FunctionConstructor {

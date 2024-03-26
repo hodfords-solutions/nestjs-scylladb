@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
 import { ModuleMetadata } from '@nestjs/common/interfaces';
-import { ConnectionOptions } from './externals';
+import { ConnectionOptions } from './externals/scylla-client-options.interface';
 
 export type ScyllaModuleOptions = {
     retryAttempts?: number;

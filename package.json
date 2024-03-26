@@ -51,7 +51,8 @@
   "dependencies": {
     "@types/cassandra-driver": "3.6.0",
     "deepmerge": "^4.3.1",
-    "express-cassandra": "2.3.2"
+    "express-cassandra": "2.3.2",
+    "snakecase-keys": "^6.0.0"
   },
   "scripts": {
     "start": "ts-node -r tsconfig-paths/register src/main.ts",

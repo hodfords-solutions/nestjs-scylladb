@@ -5,7 +5,7 @@ import {
     FindQuery,
     DeleteOptionsStatic,
     UpdateOptionsStatic
-} from '../../interfaces/externals/scylla-db.interface';
+} from '../../interfaces/externals/scylla.interface';
 
 export class ReturnQueryBuilder<T = any> {
     constructor(private readonly model: BaseModel<T>) {}

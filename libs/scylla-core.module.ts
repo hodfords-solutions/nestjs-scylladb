@@ -1,16 +1,17 @@
 import { DynamicModule, Module, Global, Provider, OnModuleDestroy, Inject, Logger } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import {
-    ScyllaModuleOptions,
-    ScyllaModuleAsyncOptions,
-    ScyllaOptionsFactory,
-    Connection,
-    ConnectionOptions
-} from './interfaces';
+
 import { SCYLLA_DB_MODULE_OPTIONS, SCYLLA_DB_MODULE_ID } from './scylla.constant';
-import { getConnectionToken, handleRetry, generateString } from './utils/scylla-db.utils';
+import { getConnectionToken, handleRetry, generateString } from './utils/scylla.utils';
 import { defer } from 'rxjs';
 import { map } from 'rxjs/operators';
+import {
+    ScyllaModuleAsyncOptions,
+    ScyllaModuleOptions,
+    ScyllaOptionsFactory
+} from './interfaces/scylla-module-options.interface';
+import { ConnectionOptions } from './interfaces/externals/scylla-client-options.interface';
+import { Connection } from './interfaces/externals/scylla-connection.interface';
 
 @Global()
 @Module({})
@@ -74,7 +75,6 @@ export class ScyllaCoreModule implements OnModuleDestroy {
         }
         Logger.log('Closing connection', 'ScyllaModule');
         const connection = this.moduleRef.get<Connection>(getConnectionToken(this.options as ConnectionOptions) as any);
-        // tslint:disable-next-line:no-unused-expression
         connection && (await connection.closeAsync());
     }
 
