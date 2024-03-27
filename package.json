@@ -1,5 +1,5 @@
 {
-  "name": "@hodfords-solutions/nestjs-scylladb",
+  "name": "@hodfords/nestjs-scylladb",
   "version": "10.0.0",
   "description": "NestJS ScyllaDB",
   "license": "MIT",
