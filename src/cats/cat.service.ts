@@ -1,13 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CatEntity } from './entities/cat.entity';
-import { CreateCatDto } from './dto/create-cat.dto';
-import { tap } from 'rxjs/operators';
-import { DogEntity } from './entities/dog.entity';
-import { CatRepository } from './cat.repository';
-import { Observable } from 'rxjs';
 import { InjectRepository } from 'libs';
-import { Repository } from 'libs/repositories/repository';
 import { uuid } from 'libs/utils/db.utils';
+import { CatRepository } from './cat.repository';
+import { CreateCatDto } from './dto/create-cat.dto';
+import { CatEntity } from './entities/cat.entity';
 
 @Injectable()
 export class CatsService {
@@ -15,46 +11,32 @@ export class CatsService {
 
     constructor(
         @InjectRepository(CatRepository)
-        private readonly catRepository: CatRepository,
-        @InjectRepository(DogEntity)
-        private readonly dogRepository: Repository<DogEntity>
+        private readonly catRepository: CatRepository
     ) {}
 
-    create(createCatDto: CreateCatDto): Observable<CatEntity> {
+    create(createCatDto: CreateCatDto): Promise<CatEntity> {
         const cat = this.catRepository.create({ ...createCatDto });
         cat.age2 = 12;
         cat.breed2 = 'some';
-        return this.catRepository.save(cat).pipe(
-            tap((x) => {
-                this.logger.log(x);
-                this.logger.log(`Instance of ${CatEntity.name}: ${x instanceof CatEntity}`);
-            })
-        );
+        return this.catRepository.save(cat);
     }
 
     findAll() {
         return this.catRepository.findAndCount({});
     }
 
-    findById(id): Observable<CatEntity> {
+    findById(id): Promise<CatEntity> {
         if (typeof id === 'string') {
             id = uuid(id);
         }
-        return this.catRepository.findOne({ id }).pipe(
-            tap((x) => {
-                this.logger.log(x);
-                this.logger.log(`Instance of ${CatEntity.name}: ${x instanceof CatEntity}`);
-            })
-        );
+        return this.catRepository.findOne({ id });
     }
 
     async batch() {
         const queries = [];
         const catBuilder = this.catRepository.getReturnQueryBuilder();
-        const dogBuilder = this.dogRepository.getReturnQueryBuilder();
 
         queries.push(catBuilder.save({ name: 'batch cat' }));
-        queries.push(dogBuilder.save({ name2: 'batch dog' }));
 
         await this.catRepository.doBatch(queries);
 

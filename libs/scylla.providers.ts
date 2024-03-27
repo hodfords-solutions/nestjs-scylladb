@@ -1,11 +1,12 @@
-import { getModelToken, getConnectionToken, getRepositoryToken } from './utils/scylla-db.utils';
+import { getModelToken, getConnectionToken, getRepositoryToken } from './utils/scylla.utils';
 import { defer } from 'rxjs';
 import { getEntity } from './utils/decorator.utils';
 import { Provider } from '@nestjs/common';
 import { RepositoryFactory } from './repositories/repository.factory';
-import { Connection, ConnectionOptions } from './interfaces';
 import { Repository } from './repositories/repository';
 import { loadModel } from './utils/model.utils';
+import { Connection } from './interfaces/externals/scylla-connection.interface';
+import { ConnectionOptions } from './interfaces/externals/scylla-client-options.interface';
 
 export function createScyllaProviders(entities?: Function[], connection?: Connection | ConnectionOptions | string) {
     const providerModel = (entity) => ({

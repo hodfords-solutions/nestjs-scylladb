@@ -1,11 +1,18 @@
+import { cloneDeep } from 'lodash';
+import { ColumnOptions } from '../interfaces/column-options.interface';
 import { addAttribute, addOptions, getOptions } from '../utils/decorator.utils';
-import { BeforeSave } from './listeners';
-import { uuid, timeuuid } from '../utils/db.utils';
-import { ColumnOptions } from 'libs';
+import { BeforeSave } from './listeners/before-save.decorator';
+import { timeuuid, uuid } from '../utils/db.utils';
 
 export function Column(options: ColumnOptions): PropertyDecorator {
+    let mappedOptions = cloneDeep(options);
+
+    if (typeof options.default === 'object' && options.default?.$dbFunction) {
+        mappedOptions.default = { [`$db_function`]: cloneDeep(options.default.$dbFunction) };
+    }
+
     return (target: object, propertyName: string) => {
-        addAttribute(target, propertyName, options);
+        addAttribute(target, propertyName, mappedOptions);
     };
 }
 
@@ -22,16 +29,9 @@ export function GeneratedUUidColumn(type: 'uuid' | 'timeuuid' = 'uuid'): Propert
 
         Column({
             type,
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            default: { $db_function: type === 'timeuuid' ? 'now()' : 'uuid()' }
+            default: { $dbFunction: type === 'timeuuid' ? 'now()' : 'uuid()' }
         })(target, propertyName);
         BeforeSave()(target, propertyName, fn);
-    };
-}
-
-export function VersionColumn(): PropertyDecorator {
-    return (target: object, propertyName: string) => {
-        addOptions(target, { options: { versions: { key: propertyName } } });
     };
 }
 
@@ -57,6 +57,7 @@ export function IndexColumn(): PropertyDecorator {
         indexes = indexes || [];
 
         const isAdded = (indexes as string[]).some((value) => value === propertyName);
+
         if (isAdded) {
             return;
         }

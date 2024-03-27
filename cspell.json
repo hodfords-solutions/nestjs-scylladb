@@ -2,6 +2,6 @@
     "version": "0.2",
     "language": "en",
     "words": ["nestjs",  "scylladb", "Metadatas", "bytea", "timeuuid", "keyspace", "entitynotfound", "deepmerge", "Khang",
-    "Gremin", "varint", "inet", "Geoshape", "udts", "udfs", "udas", "webnet", "tinyint", "TINYINT", "followee", "isnt", "hodfords"],
+    "Gremin", "varint", "inet", "Geoshape", "udts", "udfs", "udas", "webnet", "tinyint", "TINYINT", "followee", "isnt", "hodfords", "snakecase"],
     "ignorePaths": ["node_modules", "test", "*.spec.ts"]
 }
