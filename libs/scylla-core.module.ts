@@ -1,17 +1,16 @@
-import { DynamicModule, Module, Global, Provider, OnModuleDestroy, Inject, Logger } from '@nestjs/common';
+import { DynamicModule, Global, Inject, Logger, Module, OnModuleDestroy, Provider } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-
-import { SCYLLA_DB_MODULE_OPTIONS, SCYLLA_DB_MODULE_ID } from './scylla.constant';
-import { getConnectionToken, handleRetry, generateString } from './utils/scylla.utils';
-import { defer } from 'rxjs';
+import { defer, lastValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ConnectionOptions } from './interfaces/externals/scylla-client-options.interface';
+import { Connection } from './interfaces/externals/scylla-connection.interface';
 import {
     ScyllaModuleAsyncOptions,
     ScyllaModuleOptions,
     ScyllaOptionsFactory
 } from './interfaces/scylla-module-options.interface';
-import { ConnectionOptions } from './interfaces/externals/scylla-client-options.interface';
-import { Connection } from './interfaces/externals/scylla-connection.interface';
+import { SCYLLA_DB_MODULE_ID, SCYLLA_DB_MODULE_OPTIONS } from './scylla.constant';
+import { generateString, getConnectionToken, handleRetry } from './utils/scylla.utils';
 
 @Global()
 @Module({})
@@ -31,6 +30,7 @@ export class ScyllaCoreModule implements OnModuleDestroy {
             provide: getConnectionToken(options as ConnectionOptions),
             useFactory: async () => await this.createConnectionFactory(options)
         };
+
         return {
             module: ScyllaCoreModule,
             providers: [expressModuleOptions, connectionProvider],
@@ -110,11 +110,11 @@ export class ScyllaCoreModule implements OnModuleDestroy {
         const { retryAttempts, retryDelay, ...scyllaOptions } = options;
         const connection = new Connection(scyllaOptions);
 
-        return await defer(() => connection.initAsync())
-            .pipe(
+        return await lastValueFrom(
+            defer(() => connection.initAsync()).pipe(
                 handleRetry(retryAttempts, retryDelay),
                 map(() => connection)
             )
-            .toPromise();
+        );
     }
 }

@@ -14,11 +14,8 @@ export class CatsService {
         private readonly catRepository: CatRepository
     ) {}
 
-    create(createCatDto: CreateCatDto): Promise<CatEntity> {
-        const cat = this.catRepository.create({ ...createCatDto });
-        cat.age2 = 12;
-        cat.breed2 = 'some';
-        return this.catRepository.save(cat);
+    async create(createCatDto: CreateCatDto): Promise<CatEntity> {
+        return this.catRepository.save(createCatDto);
     }
 
     findAll() {

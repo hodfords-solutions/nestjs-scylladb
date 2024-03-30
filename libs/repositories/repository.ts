@@ -1,9 +1,11 @@
 import { Type } from '@nestjs/common';
 import { types } from 'cassandra-driver';
-import { EntityNotFoundError } from '../errors/entity-not-found.error';
 import { Observable, Subject, defer, lastValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import snakecaseKeys from 'snakecase-keys';
+import { EntityNotFoundError } from '../errors/entity-not-found.error';
+import { ConnectionOptions } from '../interfaces/externals/scylla-client-options.interface';
+import { Connection } from '../interfaces/externals/scylla-connection.interface';
 import {
     BaseModel,
     DeleteOptionsStatic,
@@ -12,8 +14,11 @@ import {
     SaveOptionsStatic,
     UpdateOptionsStatic
 } from '../interfaces/externals/scylla.interface';
+import { getEntity } from '../utils/decorator.utils';
+import { getSchema } from '../utils/model.utils';
 import { transformEntity } from '../utils/transform-entity.utils';
 import { ReturnQueryBuilder } from './builder/return-query.builder';
+import { RepositoryFactory } from './repository.factory';
 
 const defaultOptions = {
     findOptions: { raw: true },
@@ -27,6 +32,16 @@ export class Repository<Entity = any> {
     readonly target: Type<Entity>;
 
     readonly returnQueryBuilder: ReturnQueryBuilder<Entity>;
+
+    constructor() {}
+
+    static make(options: Partial<ConnectionOptions>): Repository {
+        const entity = getEntity(this);
+        const connection = new Connection(options);
+        const model = connection.loadSchema(entity.name, getSchema(entity));
+
+        return RepositoryFactory.create(entity, model, this);
+    }
 
     create(entity?: Partial<Entity>): Entity;
 

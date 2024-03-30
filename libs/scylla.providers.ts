@@ -1,5 +1,5 @@
 import { getModelToken, getConnectionToken, getRepositoryToken } from './utils/scylla.utils';
-import { defer } from 'rxjs';
+import { defer, lastValueFrom } from 'rxjs';
 import { getEntity } from './utils/decorator.utils';
 import { Provider } from '@nestjs/common';
 import { RepositoryFactory } from './repositories/repository.factory';
@@ -12,7 +12,7 @@ export function createScyllaProviders(entities?: Function[], connection?: Connec
     const providerModel = (entity) => ({
         provide: getModelToken(entity),
         useFactory: async (connectionLike: Connection) => {
-            return await defer(() => loadModel(connectionLike, entity)).toPromise();
+            return await lastValueFrom(defer(() => loadModel(connectionLike, entity)));
         },
         inject: [getConnectionToken(connection)]
     });
@@ -25,6 +25,7 @@ export function createScyllaProviders(entities?: Function[], connection?: Connec
 
     const provideCustomRepository = (entityRepository) => {
         const entity = getEntity(entityRepository);
+
         return {
             provide: getRepositoryToken(entityRepository),
             useFactory: async (model) => RepositoryFactory.create(entity, model, entityRepository),

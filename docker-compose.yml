@@ -1,9 +1,10 @@
 version: '3.3'
 services:
   scylla:
-    image: scylladb/scylla
+    image: scylladb/scylla:5.2.0
+    restart: always
     ports:
-      - 9042:9042
+      - 9043:9042
     container_name: test-scylla
 networks:
   webnet:

@@ -22,10 +22,10 @@ export class CatEntity {
     @Column({
         type: 'int'
     })
-    age2: number;
+    age: number;
 
     @Column({
         type: 'varchar'
     })
-    breed2: string;
+    breed: string;
 }

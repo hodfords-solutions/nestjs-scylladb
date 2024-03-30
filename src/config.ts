@@ -5,7 +5,7 @@ export const scyllaOptions: ScyllaModuleOptions = {
         contactPoints: ['localhost'],
         keyspace: 'test',
         protocolOptions: {
-            port: 9042
+            port: 9043
         },
         queryOptions: {
             consistency: 1
