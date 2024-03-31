@@ -11,20 +11,25 @@ import {
     DeleteOptionsStatic,
     FindQuery,
     FindQueryOptionsStatic,
+    RawFindQueryOptionsStatic,
     SaveOptionsStatic,
     UpdateOptionsStatic
 } from '../interfaces/externals/scylla.interface';
+import { uuid } from '../utils/db.utils';
 import { getEntity } from '../utils/decorator.utils';
 import { getSchema } from '../utils/model.utils';
 import { transformEntity } from '../utils/transform-entity.utils';
 import { ReturnQueryBuilder } from './builder/return-query.builder';
 import { RepositoryFactory } from './repository.factory';
+import { snakeCase } from 'lodash';
 
 const defaultOptions = {
     findOptions: { raw: true },
     updateOptions: snakecaseKeys({ ifExists: true }),
     deleteOptions: snakecaseKeys({ ifExists: true })
 };
+
+const convertedFindQueryOptions = ['materializedView', 'allowFiltering'];
 
 export class Repository<Entity = any> {
     readonly model: BaseModel<Entity>;
@@ -43,6 +48,16 @@ export class Repository<Entity = any> {
         return RepositoryFactory.create(entity, model, this);
     }
 
+    private mapFindQueryOptions(options?: FindQueryOptionsStatic<Entity>): RawFindQueryOptionsStatic<Entity> {
+        return Object.entries(options).reduce(
+            (option, [key, value]) => ({
+                ...option,
+                [`${convertedFindQueryOptions.includes(key) ? snakeCase(key) : key}`]: value
+            }),
+            {}
+        );
+    }
+
     create(entity?: Partial<Entity>): Entity;
 
     create(entityLikeArray: Partial<Entity>[]): Entity[];
@@ -53,11 +68,18 @@ export class Repository<Entity = any> {
 
     findOne(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Promise<Entity>;
 
-    findOne(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<Entity> {
+    findOne(
+        query: FindQuery<Entity>,
+        options: FindQueryOptionsStatic<Entity> = { allowFiltering: true }
+    ): Promise<Entity> {
+        if (query[`id`] && typeof query[`id`] === 'string') {
+            query[`id`] = uuid(query[`id`]);
+        }
+
         return lastValueFrom(
             defer(() =>
                 this.model.findOneAsync(query, {
-                    ...options,
+                    ...this.mapFindQueryOptions(options),
                     ...defaultOptions.findOptions
                 })
             ).pipe(map((x) => x && transformEntity(this.target, x)))
@@ -77,22 +99,36 @@ export class Repository<Entity = any> {
 
     find(query: FindQuery<Entity>, options?: FindQueryOptionsStatic<Entity>): Promise<Entity[]>;
 
-    find(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<Entity[]> {
+    find(
+        query: FindQuery<Entity>,
+        options: FindQueryOptionsStatic<Entity> = { allowFiltering: true }
+    ): Promise<Entity[]> {
+        if (query[`id`] && typeof query[`id`] === 'string') {
+            query[`id`] = uuid(query[`id`]);
+        }
+
         return lastValueFrom(
             defer(() =>
                 this.model.findAsync(query, {
-                    ...options,
+                    ...this.mapFindQueryOptions(options),
                     ...defaultOptions.findOptions
                 })
             ).pipe(map((x) => transformEntity(this.target, x)))
         );
     }
 
-    findAndCount(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<[Entity[], number]> {
+    findAndCount(
+        query: FindQuery<Entity>,
+        options: FindQueryOptionsStatic<Entity> = { allowFiltering: true }
+    ): Promise<[Entity[], number]> {
+        if (query[`id`] && typeof query[`id`] === 'string') {
+            query[`id`] = uuid(query[`id`]);
+        }
+
         return lastValueFrom(
             defer(() =>
                 this.model.findAsync(query, {
-                    ...(options as any),
+                    ...this.mapFindQueryOptions(options),
                     ...defaultOptions.findOptions
                 })
             ).pipe(
@@ -174,7 +210,10 @@ export class Repository<Entity = any> {
         return lastValueFrom(defer(() => this.model.truncateAsync()));
     }
 
-    stream(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): Promise<Entity> {
+    stream(
+        query: FindQuery<Entity>,
+        options: FindQueryOptionsStatic<Entity> = { allowFiltering: true }
+    ): Promise<Entity> {
         const reader$ = new Subject<any>();
 
         const onRead = (reader): void => {
@@ -195,12 +234,24 @@ export class Repository<Entity = any> {
             return;
         };
 
-        this.model.stream(query, { ...options, ...defaultOptions.findOptions }, onRead, onDone);
+        if (query[`id`] && typeof query[`id`] === 'string') {
+            query[`id`] = uuid(query[`id`]);
+        }
+
+        this.model.stream(
+            query,
+            { ...this.mapFindQueryOptions(options), ...defaultOptions.findOptions },
+            onRead,
+            onDone
+        );
 
         return lastValueFrom(reader$.asObservable());
     }
 
-    eachRow(query: FindQuery<Entity>, options: FindQueryOptionsStatic<Entity> = {}): EachRowArgument {
+    eachRow(
+        query: FindQuery<Entity>,
+        options: FindQueryOptionsStatic<Entity> = { allowFiltering: true }
+    ): EachRowArgument {
         const reader$ = new Subject<any>();
         const done$ = new Subject<any>();
         const getReader = () => reader$.asObservable();
@@ -218,7 +269,16 @@ export class Repository<Entity = any> {
             done$.complete();
         };
 
-        this.model.eachRow(query, { ...options, ...defaultOptions.findOptions }, onRow, onDone);
+        if (query[`id`] && typeof query[`id`] === 'string') {
+            query[`id`] = uuid(query[`id`]);
+        }
+
+        this.model.eachRow(
+            query,
+            { ...this.mapFindQueryOptions(options), ...defaultOptions.findOptions },
+            onRow,
+            onDone
+        );
 
         return { getReader, getDone };
     }

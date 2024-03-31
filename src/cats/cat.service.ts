@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from 'libs';
-import { uuid } from 'libs/utils/db.utils';
 import { CatRepository } from './cat.repository';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { CatEntity } from './entities/cat.entity';
@@ -23,9 +22,6 @@ export class CatsService {
     }
 
     findById(id): Promise<CatEntity> {
-        if (typeof id === 'string') {
-            id = uuid(id);
-        }
         return this.catRepository.findOne({ id });
     }
 

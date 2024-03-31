@@ -4,25 +4,25 @@ type Callback = (error: Error, value?: any) => void;
 export interface BaseModel<T = any> {
     new <R>(value?: Partial<T | R>): BaseModelStatic<T> & T;
 
-    findOne(query: FindQuery<T>, options: { return_query: true } & FindQueryOptionsStatic<T>): string;
+    findOne(query: FindQuery<T>, options: { return_query: true } & RawFindQueryOptionsStatic<T>): string;
 
     findOne(query: FindQuery<T>, callback: Callback): void;
 
-    findOne(query: FindQuery<T>, options: FindQueryOptionsStatic<T>, callback: Callback): void;
+    findOne(query: FindQuery<T>, options: RawFindQueryOptionsStatic<T>, callback: Callback): void;
 
-    findOneAsync(query: FindQuery<T>, options: FindQueryOptionsStatic<T> & { raw: true }): Promise<T>;
+    findOneAsync(query: FindQuery<T>, options: RawFindQueryOptionsStatic<T> & { raw: true }): Promise<T>;
 
-    findOneAsync(query: FindQuery<T>, options?: FindQueryOptionsStatic<T>): Promise<BaseModelStatic<T>>;
+    findOneAsync(query: FindQuery<T>, options?: RawFindQueryOptionsStatic<T>): Promise<BaseModelStatic<T>>;
 
-    find(query: FindQuery<T>, options?: { return_query: true } & FindQueryOptionsStatic<T>): string;
+    find(query: FindQuery<T>, options?: { return_query: true } & RawFindQueryOptionsStatic<T>): string;
 
     find(query: FindQuery<T>, callback: Callback): void;
 
-    find(query: FindQuery<T>, options: FindQueryOptionsStatic<T>, callback: Callback): void;
+    find(query: FindQuery<T>, options: RawFindQueryOptionsStatic<T>, callback: Callback): void;
 
-    findAsync(query: FindQuery<T>, options: FindQueryOptionsStatic<T> & { raw: true }): Promise<T[]>;
+    findAsync(query: FindQuery<T>, options: RawFindQueryOptionsStatic<T> & { raw: true }): Promise<T[]>;
 
-    findAsync(query: FindQuery<T>, options?: FindQueryOptionsStatic<T>): Promise<BaseModelStatic<T>[]>;
+    findAsync(query: FindQuery<T>, options?: RawFindQueryOptionsStatic<T>): Promise<BaseModelStatic<T>[]>;
 
     update(
         query: FindQuery<T>,
@@ -48,14 +48,14 @@ export interface BaseModel<T = any> {
 
     stream(
         query: FindQuery<T>,
-        options: FindQueryOptionsStatic<T>,
+        options: RawFindQueryOptionsStatic<T>,
         reader: (reader) => void,
         done: (err: Error) => void
     ): void;
 
     eachRow(
         query: FindQuery<T>,
-        options: FindQueryOptionsStatic<T>,
+        options: RawFindQueryOptionsStatic<T>,
         onRow: (n, row) => void,
         done: (err: Error, result: any) => void
     ): void;
@@ -127,12 +127,34 @@ export interface BaseModelStatic<T> {
     [index: string]: any;
 }
 
-export interface FindQueryOptionsStatic<T = any> {
+export interface RawFindQueryOptionsStatic<T = any> {
     select?: Array<string | keyof T>;
 
     materialized_view?: string;
 
     allow_filtering?: boolean;
+
+    distinct?: boolean;
+
+    autoPage?: boolean;
+
+    fetchSize?: number;
+
+    pageState?: string;
+
+    raw?: boolean;
+
+    prepare?: boolean;
+
+    [index: string]: any;
+}
+
+export interface FindQueryOptionsStatic<T = any> {
+    select?: Array<string | keyof T>;
+
+    materializedView?: string;
+
+    allowFiltering?: boolean;
 
     distinct?: boolean;
 
