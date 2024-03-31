@@ -11,6 +11,6 @@ export function Entity(nameOrOptions?: string | EntityOptions, maybeOptions?: En
         options.classMethods = target;
 
         setEntityName(target.prototype, name);
-        addOptions(target.prototype, snakecaseKeys(options, { deep: true }));
+        addOptions(target.prototype, snakecaseKeys(options, { deep: false }));
     };
 }

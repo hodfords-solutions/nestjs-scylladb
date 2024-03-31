@@ -165,6 +165,10 @@ export class Repository<Entity = any> {
         updateValue: Partial<Entity>,
         options: UpdateOptionsStatic<Entity> = {}
     ): Promise<any> {
+        if (query[`id`] && typeof query[`id`] === 'string') {
+            query[`id`] = uuid(query[`id`]);
+        }
+
         return lastValueFrom(
             defer(() =>
                 this.model.updateAsync(query, updateValue, {
@@ -195,7 +199,11 @@ export class Repository<Entity = any> {
 
     delete(query: FindQuery<Entity>, options?: DeleteOptionsStatic): Promise<any>;
 
-    delete(query = {}, options = {}) {
+    delete(query: FindQuery<Entity> = {}, options = {}) {
+        if (query[`id`] && typeof query[`id`] === 'string') {
+            query[`id`] = uuid(query[`id`]);
+        }
+
         return lastValueFrom(
             defer(() =>
                 this.model.deleteAsync(query, {
